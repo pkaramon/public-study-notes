@@ -1,0 +1,366 @@
+#+title: Git
+#+author: Piotr Karamon
+#+email: piotrkaramon3@gmail.com
+#+date:
+#+toc: 2
+#+startup: overview
+
+
+* The perfect commit
++ add the *right* changes
++ compose a *good* commit message
++ changes should focus on *only one* topic/point of interest.
+  A commit should not be a random collection of changes to
+  seemingly unrelated files.
++ commits ought to be small, don't worry if their number
+  is huge because you can always squash them
++ try to minimize the amount of changed files
+** git add -p file.txt
+The ~git add -p~ brings you down to a patch level. Meaning you
+can select only parts of changes that happened to a file.
+This is useful because you can separate your changes into
+multiple single-purpose and concise commits.
+** The perfect commit message
++ subject - concise summary of what happened.
+  If you are unable to write a concise summary that indicates that a commit
+  contains too many changes.  Try separating the commit into smaller
+  fine-grained pieces.
++ body - more detailed explanation
+  + what is different than before?
+  + what's the reason for the change?
+  + is there anything to watch out for/anything
+    really remarkable?
+#+begin_example
+summary
+
+body
+#+end_example
+
+Always include an empty line when your commit message has a body
+
+* Branching strategies
++ git allows you to work with branches but it does not dictate how you should
+  use them
++ you need a written best practice of how work is ideally structured
+  in your team - to avoid mistakes and collisions.
++ branching strategy highly depends on:
+  + your team
+  + team size
+  + project
+  + handling of releases
+** Integrating changes & structuring releases
+*** Mainline development ("Always integrate")
++ few branches
++ relatively small commits
++ high-quality testing & QA standards
+*** State, Release, and Feature Branches
++ different types of branches
++ branches fulfill different types of jobs:
+  + feature branches
+  + experiment branches
+  + develop branches
+** Types of branches
+*** Long-Running
++ exist through the complete lifetime of the project
++ the mirror "stages" in dev life cycle
+  + development branch (new changes, not fully tested)
+  + main branch (fully tested, reliable production code)
++ common convention: "no direct commits!" meaning
+  you first add your change to the development branch from which then it will
+  merged with main branch
+*** Short-Lived
++ they are created to carry out a single purpose:
+  + adding new features
+  + refactoring
+  + bug fixes
+  + experiments
++ will be deleted after integration with (dev/main) branches
++ they are based on long-running branches
+** GitHub Flow
+Very simple, very lean: only one long-running branch "main" + feature branches
+** Git flow
++ more structure, more rules
++ long-running: main, develop
++ short-lived: features, releases, hot-fixes
+
+* Pull Request
+They are not a core git features. They are provided by gitlab/github/bitbucket
+etc. Pull requests are about communicating about and reviewing code.  Without a
+pull request once you've finished a feature you would simply merge it into main.
+A pull request invites reviewers to provide feedback before merging.  Pull
+requests allow you to contribute to projects to which you do not have a direct
+access. Let's say Bob has hosted an open source library on github. You cannot
+directly alter that code. Instead you fork his repository, make your changes
+and create a pull request. Then Bob and other contributors can discuss, comment
+on your change and if they like it they can approve it.
+
+* Fork
+A fork is your own personal copy of a git repository.
+* Merge conflicts
+They happen when integrating commits from different sources.
++ ~git merge~
++ ~git rebase~
++ ~git pull~
++ ~git cherry-pick~
++ ~git stash apply~
+Most of the time git will be able to figure out how to merge files
+on its own. However there are still a lot of situations in which git
+can't do that. For example if one commit changed a certain line
+to one string, and another commit changed that same line to yet again
+a different string. In this case git cannot know which one is correct,
+it needs you do make that decision. In case of a conflict you can undo
+a merge or a rebase. Simply by doing
+: git merge/rebase --abort
+** How conflicts actually look like?
+The problem are is specially surrounded
+: <<<<<<< HEAD
+: ...problematic area...
+: =======
+: >>>>>>> develop
+Solving the conflict means deleting those files and make changes that you
+actually want. You can solve those conflicts using a simple text editor.
+However, some tools or sophisticated text editors/ides have special tools which
+make your job a lot easier.
+* Merge vs Rebase
+Merge and rebase are ways of integrating branches.
+** Merge
+In order to perform a merge you need to have two branches.
+Typically they are:
++ feature branch
++ main/develop branch
+Then git looks for three commits:
++ common ancestor (split point, when typically feature branch was created)
++ last commit on branch-A
++ last commit on branch-B
+*** Fast forward merge
+If the last commit on one branch is the same as common ancestor git
+can perform a special kind of merge called fast-forward merge. It will just take commits from one branch and apply them to the other. It is a
+seamless, effortless merge, however they are not that common. They can happen fairly often if the only developer on a project is you.
+*** More typical kind of merge
+Usually in order to perform a merge we need something called a merge commit.
+It's different from a lot of commits because it is created automatically, but we
+can still alter its message and so. The merge commit purpose is to connect two branches.
+** Rebase
+Rebase is a different(not better or worse) way of integrating two branches. Some
+people want their project history to look like a straight line, without any
+signs it was split, and then combined.
+Rebase will:
+1. Remove temporarily commits from branch-a.
+2. Copy commits from branch-b to branch-a.
+3. Reapply those removed commits back.
+#+begin_example
+c1 <- c3 (branch-a)
+ |<- c2 <- c4 (branch-b)
+
+
+c1 <- c2 <- c4 (branch-b, branch-a)
+
+c1 <- c2 <- c4 <- c3* (branch-a)
+        (branch-b)
+#+end_example
+This preserves the original commit structure. Rebase rewrites the commit
+history. ~c3*~ is not the same as ~c3~. The contents of those commits is
+identical, but they are different. ~c3*~ has a different parent. ~c3*~ and ~c3~
+obviously have different hashes.
+A good rule is:
+#+begin_quote
+DO NOT use rebase on commits that you've already pushed/shared
+on a remote repository
+#+end_quote
+
+#+begin_quote
+Instead, use it for cleaning up your local commit history
+before merging it into a shared team branch
+#+end_quote
+
+* Interactive rebase
+It is a tool for optimizing and cleaning up your commit history. You can
++ change a commit message
++ delete commits
++ reorder commits
++ combine multiple commits into one
++ edit / split an existing commit into multiple ones
+*Interactive rebase* rewrites your commit history.  The same rule as with normal
+rebase still applies.
+#+begin_quote
+DO NOT use interactive rebase on commits that you've already pushed/shared
+on a remote repository
+#+end_quote
+That means you should you interactive rebase for cleaning up / fixing your feature branch's
+commit history before merging it into a shared team branch.
+** Step by step
+1. How far back you want to go?
+   What should be the "base" commit?
+2. src_bash[:exports code]{git rebase -i HEAD~3}
+   The number following the ~ indicates how far back you want to go?
+3. In the editor, only determine which actions you want to perform. Don't change commit data in this step, yet!
+** What can you do with ~rebase -i~?
+It is important to know that the order of commits in ~rebase -i~ is different
+from that used by ~git log~. In ~rebase -i~ the oldest commits are at the top.
+Lines inside of the rebase window have the following format
+: command <commit> <commit-message>
++ ~pick~ does nothing
++ ~reword~ lets you change the commit message
++ ~drop~ lets you delete a commit
++ ~squash~ combines the current line with the line above. If you put ~squash~ on
+  line 3, it will squash it with line 2.
+* Cherry picking
+Cherry picking is used for integrating single, specific commits.
+It can be useful when you for example, created a commit on a wrong branch.
+
+#+begin_src sh :eval no
+git checkout feature-branch
+git cherry-pick 26b1fb48
+git checkout master
+git reset --hard HEAD~1
+#+end_src
+
+This snippet of code picks the specified commit and pushes it to the
+feature-branch. Then we delete that commit from the master branch.
+* Searching for certain commits
++ ~--before~  commits before a certain date
++ ~--grep~ commits with messages matching the passed regex
++ ~--author~  commits written by specified author
++ ~-- <filename>~ commits that include changes to specified file
+  you can pass multiple filenames
++ ~--after~  commits after a certain date
++ ~<branch-name>~ commits on a certain branch
+The ~git commit~ command accepts arguments that you can use to search
+only for certain commits.
+You can combine those options.
+* Submodules
+Say you need some third-party code. One option is to just copy and paste their
+library or parts of it into your project. However that means you have to mix
+someone else code with yours. Also updating the external code is a *manual
+process*.
+
+A submodule is a git repository inside of another git repository.
+
+To add a submodule you do:
+#+begin_src sh :eval never
+git submodule add <repo-url>
+#+end_src
+
+When you clone a repository which contains submodules after a clone
+you have to run
+#+begin_src sh :eval never
+git submodule update --init --recursive
+#+end_src
+
+You can however do the same thing using just one command.
+#+begin_src sh :eval never
+git clone --recursive-submodules <repo-url>
+#+end_src
+* Undoing mistakes in git
+** Discarding all local changes in a file
+#+begin_src sh :eval never
+git restore <filename>
+#+end_src
+The ~filename~ will discard any changes that you've made to that file.
+#+begin_quote
+You cannot undo this operation. Your changes will be gone forever.
+#+end_quote
+** Restoring a deleted file
+You may accidentally delete a file. In this case you can very easily bring it back.
+#+begin_src sh :eval never
+git restore <filename>
+#+end_src
+** Discarding chunks/lines in a file
+Sometimes you want to keep only certain changes that you've made to a file.
+#+begin_src sh :eval never
+git restore -p <filename>
+#+end_src
+~-p~ flags brings you down to a patch level, meaning you can interactively
+select which changes ought to be kept.
+** Discarding all local changes
+#+begin_src sh :eval never
+git restore .
+#+end_src
+
+#+begin_quote
+You cannot undo this operation. Your changes will be gone forever.
+#+end_quote
+** Fixing the last commit
+Fixing the *last* commit in git is very easy.
+#+begin_src sh :eval never
+git commit --ammend -m "<new-commit-message>"
+#+end_src
+This will take your staged changes and apply them to the last commit. Also it
+will change the commit message to the one you've passed.
+#+begin_quote
+~--amend~ rewrites history! *Never* change history for commits that have
+already been *pushed to a remote repository.*
+#+end_quote
+** Reverting a commit in the middle
+~git revert~ creates a new commit that reverts the effects of a specified
+commit. It will apply reversed changes to the ones in the specified commit. It
+works in a very non destructive way. All you need to revert a certain commit is
+to run ~git revert <commit-hash>~. You then will be prompted for a commit
+message, which will be filled with a default.
+** Resetting to an old revision
+~git reset~ sets your ~HEAD~ pointer to an older revision. It has the effect of
+deleting a certain number of commits starting from the head.
+#+begin_src sh :eval never
+git reset --hard <commit-hash>
+#+end_src
+This command "takes you back in time" when the passed commit was the ~HEAD~.
++ ~--hard~ means no local changes should survive
++ ~--mixed~ this keeps the changes we are going to undo as local changes
+** Resetting a file to an old revision
+#+begin_src sh :eval never
+git restore --source <old-revision-commit-hash> <filename>
+#+end_src
+** Reflog
+It is a journal. You can for example recover deleted commits with it.
+#+begin_src sh :eval never
+git reflog
+#+end_src
+shows you the journal, each line starts with a hash. You can just
+do src_sh[:eval never]{git reset <hash>} to for example recover deleted commits.
+Often you want to do those recoveries inside of another branch
+to do that:
+#+begin_src sh :eval never
+git branch <name-of-new-branch> <hash-from-reflog>
+#+end_src
+
+Reflog can also be used to recover deleted branches. Just do
+#+begin_src sh :eval never
+git branch <name-of-new-branch> <hash-from-reflog>
+#+end_src
+* Stash
+Stashing is handy when you've been working on a change but for some reason you
+need to change context. This for example happens when you need to quickly fix a
+bug. ~git stash~ allows you to save your changes and reapply them latter to do a
+full commit.
+** ~git stash~
+This command saves your changes(both staged an unstaged) and reverts you to the
+last commit on the current branch.  The ~-p~ options brings you down to the
+patch level.  That means you can interactively select which changes you wish to
+stash. There are lots of options to choose ~(y,n,q,a,d,e,?)~. To view
+information about every one of those options type ~?~.  *By default git will not
+stash changes made to untracked or ignored files*
+** Stashing untracked and ignored files
+In order to stash untracked files you need to pass the ~-u~ or ~--include-untracked~ option.
+If you also want to stash changes made to ignored files you need to pass the ~-a~ or ~--all~ flag.
+** ~git stash save~
+This command allows you to stash your changed and provide a message describing
+the stash. For example ~git stash save "add footer"~
+** ~git stash list~
+This command allows you to list all your stashes.
+** ~git stash drop~
+You can a stash name to this command and it deletes it.
+** ~git stash clear~
+This command deletes all of your stashes.
+** ~git stash pop~
+This command allows you to reapply the changes you've stashed. However, all the changes
+introduced by reapplying the stash will be unstaged, even if you've stashed some staged changes.
+By default this command will reapply  changes in the most recently created stash. To pop a different stash
+use ~git stash pop stash@{<index>}~.
+** ~git stash apply~
+Does the same thing as ~git stash pop~ but keeps your stash,
+so you can for example apply it on many different branches.
+** ~git stash show~
+This command shows you a description of changes in the stash.
+To view it in more detail pass ~-p~ option.
+** ~git stash branch <branch-name> <stash>~
+This checks out a new branch based on the commit that you created your stash from, and then pops your stashed changes onto it.
