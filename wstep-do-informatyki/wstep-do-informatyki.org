@@ -1,0 +1,961 @@
+#+title: Wstęp do informatyki - notatki
+#+author: Piotr Karamon
+#+property: header-args:python :exports both :results output :wrap example :cache yes
+#+html_content_class: section
+#+date:
+#+latex_engraved_theme: modus-operandi
+
+* Sqrt
+#+begin_src python
+def sqrt(n):
+    i = 0
+    while (n := n - (2*i+1)) >= 0:
+        i += 1
+    return i
+
+print(sqrt(100))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+10
+#+end_example
+
+* Bisection method
+** Square root
+#+begin_src python
+EPSILON = 1e-10
+
+def sqrt(n):
+    a,b = 0,n
+    midpoint =(a+b)/2
+    while (errorabs := abs(midpoint*midpoint - n)) > EPSILON:
+        midpoint =(a+b)/2
+        if (midpoint*midpoint - n) < 0:
+            a = midpoint
+        else:
+            b = midpoint
+    return midpoint
+
+print(sqrt(2))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+1.4142135623842478
+#+end_example
+
+
+#+RESULTS:
+** For a general function
+#+begin_src python
+f = lambda x: x**x - 2022
+
+a,b = 1,5
+while abs(y:=f(mid:=(a+b)/2)) > 1e-16:
+    if y < 0:
+        a,b = mid, b
+    elif y > 0:
+        a,b = a, mid
+
+print((a+b)/2)
+#+end_src
+
+* IsPrime
+** Basic
+#+begin_src python
+import math
+def is_prime(n):
+    if n <= 1: return False
+    i = 2
+    while i*i <= n:
+        if n % i == 0:
+            return False
+        i+=1
+    return True
+
+for i in range(20):
+    print(i, is_prime(i))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+0 False
+1 False
+2 True
+3 True
+4 False
+5 True
+6 False
+7 True
+8 False
+9 False
+10 False
+11 True
+12 False
+13 True
+14 False
+15 False
+16 False
+17 True
+18 False
+19 True
+#+end_example
+
+** How it should look like
+#+begin_src python
+import math
+
+def is_prime(n):
+    if n == 2 or n == 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0 or n <= 1:
+        return False
+    i = 5
+    while i <= math.isqrt(n):
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 4
+    return True
+
+def is_prime_basic(n):
+    if n <= 1: return False
+    i = 2
+    while i*i <= n:
+        if n % i == 0:
+            return False
+        i+=1
+    return True
+
+print(all(is_prime(x) == is_prime_basic(x) for x in range(-2, 10_000)))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+True
+#+end_example
+
+* Sum of digits
+#+begin_src python
+def sum_of_digits(n):
+    total = 0
+    while n != 0:
+        total += n % 10
+        n = n // 10
+    return total
+
+print(sum_of_digits(35201))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+11
+#+end_example
+* TODO Divisors :noexport:
+* TODO Liczby doskonale :noexport:
+* GCD AND LCM
+** Introduction
+The greatest common divisor(NWD in polish) of two integers a,b is the biggest
+integer which divides both of them.  Meaning $a=de$ and $b=df$, the $d$ is the
+$GCD(a,b)$. There is also a special case when one of the $a$ and $b$ is equal
+to 0. Then the value of the GCD is equal to the absolute value of the non-zero
+integer.
+
+$$GCD(a,0) = GCD(0,a) = |a|$$
+
+$GCD(0,0)$ is *commonly* defined as 0, but some authors leave it as undefined.
+$GCD$ is *always* positive.
+** Example
+$$54 = 27 * 2 = 3^3 * 2^1$$
+The divisors of 54 are: $1,2,3,6,9,18,27,54$
+
+$$24=2^3*3^1$$
+
+The divisors of 24 are: $1,2,3,4,6,8,12,24$
+
+Common divisors: $1,2,3,6$
+
+So the $GCD(54,24)=6$
+
+** Coprime number(względnie pierwsze)
+$a$ and $b$ are said to be coprime if and only if  $gcd(a,b)=1$
+** LCM(NWW najmniejsza wspólna wielokrotoność)
+$$LCM(a,b) = \frac{|a*b|}{GCD(a,b)}$$
+* Prime factorization
+$$54 = 27*2 = 3^3 * 2^1$$
+$$3^3 * 2^1$$ is the prime factorization of 54.
+
+Prime factorization is a reduction of a number to its prime factors(with powers attached).
+
+#+begin_src python
+from collections import defaultdict
+
+def prime_factors(n):
+    i, factors = 2, []
+    while n != 1:
+        m = 0
+        while n%i == 0:
+            m += 1
+            n //= i
+        if m > 0:
+            factors.append((i,m))
+        i+=1
+    return factors
+
+print(prime_factors(3**3*2**3*7**2))
+#+end_src
+
+#+RESULTS:
+: [(2, 3), (3, 3), (7, 2)]
+** Linear combination
+$$gcd(a,b) = ax + by$$
+
+Where $a,b \in Z$
+
+** Code example
+#+begin_src python
+def gcd(p,q):
+    if q == 0:
+        return p
+    return gcd(q, p%q)
+print(gcd(2*3*5*7*11*13,3*5*11))
+#+end_src
+
+#+RESULTS:
+: 165
+
+#+begin_src python
+def gcd(a,b):
+    while b != 0:
+        a,b = b, a%b
+    return a
+print(gcd(27*3, 54*3))
+#+end_src
+
+#+RESULTS:
+: 81
+
+** GCD(a,b,c)
+
+* Calculating PI
+#+begin_src python
+factor = 0.5**0.5
+product = 1
+for _ in range(1000):
+    product*= factor
+    factor = (0.5 + 0.5*factor) ** 0.5
+
+print(2/product)
+#+end_src
+
+#+RESULTS:
+: 3.141592653589794
+* Calculating cube roots
+#+begin_src python
+def cbrt(k):
+    error = lambda x: x**3 - k
+    g = k/3 # guess
+    while abs(err:=error(g)) > 1e-10:
+        g = g - err / (2*g**2)
+    return g
+
+print(cbrt(8))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+1.9999999999933642
+#+end_example
+* Calculating e
+#+begin_src python
+factorial = 1
+e = 0
+for i in range(1, 10000):
+    e += 1/factorial
+    factorial *= i
+print(e)
+#+end_src
+
+#+RESULTS:
+: 2.7182818284590455
+* IsPalindrome
+#+begin_src python
+def is_palindrome_decimal(n):
+    orig_n = n
+    rn = 0
+    while n !=0:
+        digit = n % 10
+        rn = 10*rn + digit
+        n = (n - digit) // 10
+    return rn == orig_n
+
+def is_palindrome_binary(n):
+    orig_n = n
+    rn = 0
+    while n !=0:
+        digit = n % 2
+        rn = 2*rn + digit
+        n = (n - digit) // 2
+    return rn == orig_n
+
+print(is_palindrome_decimal(321123))
+print(is_palindrome_decimal(391123))
+print(is_palindrome_binary(0b10101))
+print(is_palindrome_binary(0b11101))
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+True
+False
+True
+False
+#+end_example
+
+* cosx :noexport:
+#+begin_src python
+def cos(x):
+    result = 1
+    n2_fact = 1
+    x_pow_2n = 1
+    for n in range(1, 10):
+        result += (-1)**n * x_pow_2n / n2_fact
+        x_pow_2n *= x*x
+        n2_fact *= 2*n*(2*n-1)
+    return result
+
+print(cos(3.14/4))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+0.2926117308328001
+#+end_example
+* decimal repr :noexport:
+#+begin_src python
+a,b,n=231,13,1
+
+if n == 0:
+    decimal = a // b
+    a = a%b * 1
+
+decimal = [str(a//b)]
+if n != 0: decimal.append('.')
+for i in range(n):
+    a = a%b * 10
+    decimal.append(str(a//b))
+
+if decimal[-1] >= 5:
+    i = -2
+    while decimal[-]
+
+    if decimal[-2] < 9:
+        decimal[-2] = int(decimal[-2]) + 1
+
+        [3,4,5,6,7,9]
+
+
+print(decimal)
+#+end_src
+
+#+RESULTS:
+: ['17', '.', '7']
+
+* A_n sequence
+#+begin_src python :eval no
+def num_steps(start):
+    a_n = start
+    steps = 0
+    while a_n != 0:
+        steps += 1
+        a_n = (a_n %2)*(3*a_n + 1) + (1-a_n%2) * a_n /2
+    return s
+#+end_src
+
+#+RESULTS:
+#+begin_example
+#+end_example
+
+* Generating subsets
+A subset of a $n$ element set can be fully describe as a binary sequence of length $n$.
+This binary sequence indicates presence or absence of a element.
+Example:
+
+Set A = {1,2,3,4}
+
+Subset s = 0110
+
+meaning s contains 2,3 and does not contain 1,4
+
+Generating subsets comes down to generating those binary sequences of length $n$
+** Generating all subsets
+#+begin_src python
+A = [1,2,3,4]
+subset = [0]*len(A)
+
+def subsets(n, p):
+    if n == p:
+        print('elements', [A[i] for i in range(len(subset)) if subset[i] == 1], subset)
+        return
+    subset[p] = 0
+    subsets(n, p+1)
+    subset[p] = 1
+    subsets(n,p +1)
+
+subsets(len(A), 0)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+elements [] [0, 0, 0, 0]
+elements [4] [0, 0, 0, 1]
+elements [3] [0, 0, 1, 0]
+elements [3, 4] [0, 0, 1, 1]
+elements [2] [0, 1, 0, 0]
+elements [2, 4] [0, 1, 0, 1]
+elements [2, 3] [0, 1, 1, 0]
+elements [2, 3, 4] [0, 1, 1, 1]
+elements [1] [1, 0, 0, 0]
+elements [1, 4] [1, 0, 0, 1]
+elements [1, 3] [1, 0, 1, 0]
+elements [1, 3, 4] [1, 0, 1, 1]
+elements [1, 2] [1, 1, 0, 0]
+elements [1, 2, 4] [1, 1, 0, 1]
+elements [1, 2, 3] [1, 1, 1, 0]
+elements [1, 2, 3, 4] [1, 1, 1, 1]
+#+end_example
+
+** Next subset
+#+begin_src python
+A = [1,2,3,4]
+subset = [0]*len(A)
+
+def next_subset(subset):
+    i = 0
+    while i < len(subset) and subset[i] == 1:
+        i+=1
+    # looping behaviour
+    if i==len(subset):
+        for i in range(len(subset)):
+            subset[i] = 0
+        return subset
+    subset[i] = 1
+    for j in range(0, i):
+        subset[j] = 0
+    return subset
+
+
+get_elements = lambda subset: [A[i] for i in range(len(subset)) if subset[i] == 1]
+subset = [0,0,0,0]
+for i in range(18):
+    print(next_subset(subset), get_elements(subset))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[1, 0, 0, 0] [1]
+[0, 1, 0, 0] [2]
+[1, 1, 0, 0] [1, 2]
+[0, 0, 1, 0] [3]
+[1, 0, 1, 0] [1, 3]
+[0, 1, 1, 0] [2, 3]
+[1, 1, 1, 0] [1, 2, 3]
+[0, 0, 0, 1] [4]
+[1, 0, 0, 1] [1, 4]
+[0, 1, 0, 1] [2, 4]
+[1, 1, 0, 1] [1, 2, 4]
+[0, 0, 1, 1] [3, 4]
+[1, 0, 1, 1] [1, 3, 4]
+[0, 1, 1, 1] [2, 3, 4]
+[1, 1, 1, 1] [1, 2, 3, 4]
+[0, 0, 0, 0] []
+[1, 0, 0, 0] [1]
+[0, 1, 0, 0] [2]
+#+end_example
+** Subsets with specified size
+Say we have an $n$ element set and we are only interested in $k$ element subsets
+of it.
+Any set with $n$ elements we can represent as $A = \{1,2,3,..., n\}$.
+
+Example:
+#+begin_example
+A={1,2,3,4,5}
+We want only subsets with size 3.
+1 2 3
+1 2 4
+1 2 5
+1 3 4
+1 3 5
+1 4 5
+2 3 4
+2 3 5
+2 4 5
+3 4 5
+#+end_example
+
+#+begin_src python
+def next_subset(n, subset):
+    i = 0
+    if subset[i] < n:
+        subset[i]+=1
+        return subset
+    else:
+        pass
+    return subset
+
+n, x = 5,[3,2,1]
+
+print(x)
+for i in range(10):
+    x = next_subset(n,x)
+    print(x)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[3, 2, 1]
+[4, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+[5, 2, 1]
+#+end_example
+* Divisors
+#+begin_src python
+from math import sqrt
+def divisors(k):
+    i = 1
+    while i <= sqrt(k):
+        if k % i == 0:
+            print(i)
+            print(-i)
+            j = k/i
+            if j != i:
+                print(j)
+                print(-j)
+        i += 1
+
+divisors(6)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+1
+-1
+6.0
+-6.0
+2
+-2
+3.0
+-3.0
+#+end_example
+* perfect numbers :noexport:
+#+begin_src python
+from math import sqrt
+
+def is_perfect(k):
+    sum = 1
+    i = 2
+    while i <= sqrt(k):
+        if k % i == 0:
+            sum += i
+            if k // i != i:
+                sum += k//i
+        i += 1
+    return sum == k
+
+for i in range(1,10**4):
+    if is_perfect(i):
+        print(i)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+1
+6
+28
+496
+8128
+#+end_example
+* Friendly numbers :noexport:
+#+begin_src python
+from math import sqrt
+def div_sum(k):
+    sum = 1
+    i = 2
+    while i <= sqrt(k):
+        if k % i == 0:
+            sum += i
+            if k // i != i:
+                sum += k//i
+        i += 1
+    return sum
+
+for i in range(1, 1000):
+    for j in range(1, i):
+        if(div_sum(i) == j and div_sum(j) ==i):
+            print(i,j)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+284 220
+#+end_example
+* a,b,n :noexport:
+#+begin_src python
+n, a, b = 12, 119, 2312
+
+print(a // b, end='')
+r = a % b
+if r == 0 or n == 0: exit()
+
+print('.', end='')
+for i in range(n):
+    print(10*r // b, end='')
+    r = 10*r %b
+#+end_src
+
+#+RESULTS:
+: 0.051470588235
+* 235 :noexport:
+#+begin_src python
+def is_235(n):
+    for d in [2,3,5]:
+        while n % d == 0:
+            n //= d
+    return n == 1
+
+print(is_235(2*3*5*6*15*20*100*11))
+#+end_src
+
+#+RESULTS:
+: False
+* Find divisors with the min sum
+#+begin_src python
+from math import sqrt
+def find_ab(n):
+    i = 1
+    divisor = 1
+    while i <= sqrt(n):
+        if n % i == 0:
+            divisor = i
+        i += 1
+    return divisor, n // divisor
+
+print(find_ab(120))
+#+end_src
+
+#+RESULTS:
+: (10, 12)
+* Convert to 2-16 system
+#+begin_src python
+def print_in_base(n, base):
+    digits = []
+    while n != 0:
+        digits.append(n % base)
+        n //= base
+    for i in range(len(digits) - 1, -1, -1):
+        digit = digits[i]
+        if digit <= 9:
+            print(digit, end='')
+        else:
+            print(chr(ord('A') + digit - 10), end='')
+    print()
+print_in_base(255, 16)
+print_in_base(7, 2)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+FF
+111
+#+end_example
+* Same digits
+#+begin_src python
+def same_digits(a,b):
+    return get_digit_counts(a) == get_digit_counts(b)
+
+def get_digit_counts(n):
+    counts = [0 for _ in range(9)]
+    while n != 0:
+        counts[n % 10] += 1
+        n //= 10
+    return counts
+
+print(same_digits(1122334, 4223311))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+True
+#+end_example
+* Sieve of Eratosthenes
+#+begin_src python
+def sieve(N):
+    numbers = list(range(2, N))
+    for i in range(len(numbers)):
+        if numbers[i] != -1:
+            cross_out_multiples(numbers, numbers[i], i+1)
+
+    return [n for n in numbers if n != -1]
+
+def cross_out_multiples(numbers, divisor, start_index):
+    for i in range(start_index, len(numbers)):
+        if numbers[i] % divisor == 0:
+            numbers[i] = -1
+
+print(sieve(100))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+#+end_example
+* Calculating e again
+#+begin_src python
+def calculate_e(N):
+   nom = 1
+   n, fact_n = 2, 2
+   limit = 10**(N+3)
+   while fact_n < limit:
+      nom = nom*(n+1) + 1
+      n, fact_n = n+1, fact_n * (n+1)
+
+   a,b = nom, fact_n
+   print('2.',end='')
+   for i in range(N):
+       print(10*a // b, end='')
+       a = 10*a % b
+calculate_e(30)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+2.718281828459045235360287471352
+#+end_example
+* Area under a graph
+We can approximate the area under a graph using what is known as /rectangle method/.
+In the following example we are calculating the area under a graph of $y=1/x$ in the interval $[1, k)$.
+#+begin_src python
+def area(start, end, f):
+    x = start
+    dx = 1e-6
+    area = 0
+    while x < end:
+        area += dx * f(x)
+        x += dx
+    return area
+print(area(1, 4, lambda x: 1/x))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+1.3862947361296067
+#+end_example
+* Different digits in other bases
+#+begin_src python
+def diff_digits(a, b):
+    for base in range(2, 17):
+        if not have_common_digit(a, b, base):
+            return base
+    return -1
+
+
+def have_common_digit(a, b, base):
+    digits_in_b = [0 for _ in range(base)]
+    while b != 0:
+        digits_in_b[b%base] = 1
+        b //= base
+
+    while a != 0:
+        if digits_in_b[a % base] == 1:
+            return True
+        a //= base
+
+    return False
+
+
+print(diff_digits(123, 522))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+11
+#+end_example
+* Primes made by combining numbers :noexport:
+$$a=123$$ $$b=75$$
+$$12375 \to 11100$$
+$$12735 \to 11010$$
+$$75123 \to 00111$$
+$$71235 \to 01110$$
+
+$$\text{Liczba cyfr liczby N} = \text{floor}(\log_{10}(N) + 1)$$
+#+begin_src python
+from math import floor, log10
+for i in range(1, 101, 9):
+    print(i, floor(log10(i) +1))
+#+end_src
+#+RESULTS:
+#+begin_example
+1 1
+10 2
+19 2
+28 2
+37 2
+46 2
+55 2
+64 2
+73 2
+82 2
+91 2
+100 3
+#+end_example
+
+#+begin_src python
+def permutations(number, binary_digits, set_bits):
+    if set_bits == 0 or binary_digits == 0 or binary_digits == set_bits:
+        return [number]
+    mask = (1<<(binary_digits-1)) - 1
+    rest = number & mask
+    return [(1 << (binary_digits-1)) + perm for perm in permutations(rest, binary_digits-1, set_bits -1)] \
+            + permutations(number >> 1, binary_digits-1, set_bits)
+
+for x in permutations(0b111000,6,3 ):
+    print(f'{x:06b}')
+#+end_src
+
+#+RESULTS:
+#+begin_example
+111000
+110100
+110010
+110001
+101100
+101010
+101001
+100110
+100101
+100011
+011100
+011010
+011001
+010110
+010101
+010011
+001110
+001101
+001011
+000111
+#+end_example
+
+#+begin_src python
+from math import floor, log10, sqrt
+
+
+def permutations(number, binary_digits, set_bits):
+    if set_bits == 0 or binary_digits == 0 or binary_digits == set_bits:
+        return [number]
+    mask = (1<<(binary_digits-1)) - 1
+    rest = number & mask
+    return [(1 << (binary_digits-1)) + perm for perm in permutations(rest, binary_digits-1, set_bits -1)] \
+            + permutations(number >> 1, binary_digits-1, set_bits)
+
+
+def interpret_mask(a,b, mask):
+    num = 0
+    while a > 0 or b > 0:
+        if mask % 2 == 1:
+            num = 10*num + a % 10
+            a //= 10
+        else:
+            num = 10*num + b % 10
+            b //= 10
+        mask //= 2
+    return num
+
+
+def reverse(n):
+    rev = 0
+    while n != 0:
+        rev = 10*rev + n % 10
+        n //=10
+    return rev
+
+
+def is_prime(n):
+    if n == 2 or n == 3: return True
+    if  n % 2 == 0 or n % 3 == 0 or n < 2: return False
+    i = 5
+    while i < sqrt(n) + 1:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 6
+    return True
+
+
+def n_digits(n) :
+    return floor(log10(n) + 1)
+
+a, b = 18, 449
+a, b = reverse(a), reverse(b)
+set_bits = n_digits(a)
+binary_digits = set_bits + n_digits(b)
+starting_mask = ((1<<set_bits) - 1) << (binary_digits-set_bits)
+
+for perm in permutations(starting_mask, binary_digits, set_bits):
+    n = interpret_mask(a, b, perm)
+    if is_prime(n):
+        print(n)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+44189
+14489
+41849
+#+end_example
+* x^x = 2020
+We have to solve the following equation $x^x = 2020$ using the Newton method.
+The derivative of $x^x$ is equal to $x^x * (ln(x) + 1)$.
+We will use the following formula:
+$$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$$
+
+#+begin_src python
+from math import log
+f = lambda x: x**x - 2020
+f_prime = lambda x: (x**x) * (log(x) + 1)
+
+x = 20
+for _ in range(1000):
+    x = x - f(x)/f_prime(x)
+print(x)
+
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+4.831687113003211
+#+end_example
+* Exercise 18 :noexport:
+$$a_0 = 0, a_1 = 1, a_n = a_{n-1} - b_{n-1}*a_{n-2}$$
+$$b_0 = 2, b_n = b_{n-1} + 2*a_{n-1}$$
+
+#+begin_src python :noeval
+k, m = 0, 1 # a series
+x = 2       # b series
+while True:
+    n = int(input())
+    if n != k:
+        break
+    print(x)
+    x = x + 2*k
+    k, m = m, m - x*k
+#+end_src

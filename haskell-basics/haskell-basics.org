@@ -1,0 +1,1247 @@
+
+#+title: Haskell Basics - notes
+#+startup: overview
+#+auto_tangle: t
+#+toc: nil
+#+date:
+#+PROPERTY: header-args:haskell  :results output :exports both :cache yes :wrap example :eval yes
+#+PROPERTY: header-args:sh  :results output :exports both :wrap example :eval no
+#+latex-engraved-theme: modus-operandi
+
+* Comments
+#+begin_src haskell :exports code
+-- Single line comment
+{-
+Multiline
+comment
+-}
+#+end_src
+
+
+* Basic types
+** Int
+
+=Int= can store whole numbers in range $[-2^{63}, 2^{63})$
+#+begin_src haskell
+minInt = minBound :: Int
+maxInt = maxBound :: Int
+"Lower bound " ++ show minInt ++ " Upper Bound " ++ show maxInt
+#+end_src
+
+
+** Integer
+=Integer= is an unbounded whole number. Works like the =int= type in python.
+#+begin_src haskell :eval yes
+x = 2 ^ 124 :: Integer
+"Very big number " ++ show x
+#+end_src
+
+
+** Floating point numbers
+=Float= - single precision floating point numbers.
+=Double= - double precision floating point numbers.
+In reality you pretty much always should use =Double=
+
+#+begin_src haskell :results output
+x = (3.14 * 2.0 + 2.71) :: Double
+x
+#+end_src
+
+
+** Char
+Single quotes =''=
+#+begin_src haskell :results output
+firstInitial = 'P'
+secondInitial = 'K'
+
+show firstInitial ++ " " ++ show secondInitial
+#+end_src
+
+
+There are also typical math functions =sin, cos, tan, asin, atan, acos, sinh, tanh, cosh, asinh, atanh, acosh=.
+
+#+begin_src haskell
+9 ** 2
+9 ** (0.5)
+exp 1
+log (exp 1)
+log 1024 / log 2
+#+end_src
+
+
+#+begin_src haskell
+truncate (-3.5) -- discards the fractional part
+floor (-3.5) -- finds the biggest integer smaller than -3.5
+"---"
+round 9.70
+round 9.5
+round 9.123
+"---"
+ceiling 9.00001
+#+end_src
+
+
+* Lists
+** Creating lists
++ lists in Haskell are unidirectional
++ *we can only add items to the front of a list*
+
+#+begin_src haskell
+primes = [2, 3, 5, 7]
+morePrimes = primes ++ [11, 13, 17]
+morePrimes
+
+indexes = 1 : 2 : 3 : 4 : 5 : []
+indexes
+#+end_src
+
+
+#+begin_src haskell :eval yes
+[2,4..20]
+[10,4..(-20)]
+['a'..'z']
+['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
+#+end_src
+
+
+#+begin_src haskell
+take 10 (repeat 2)
+replicate 10 3
+take 10 (cycle [9,2,0])
+#+end_src
+
+
+We can create nested lists.
+#+begin_src haskell :eval no
+grid :: [[Int]]
+grid = [[1,0,1], [1,1,1], [1,2,1]]
+#+end_src
+
+** Useful list functions
+#+begin_src haskell :session hlists
+nums = [8,9,11,13,2]
+nums !! 1
+length nums
+reverse nums
+#+end_src
+
+
+#+begin_src haskell :session hlists
+null []
+null nums
+#+end_src
+
+
+#+begin_src haskell :session hlists
+last nums
+init nums
+take 3 nums
+drop 3 nums
+#+end_src
+
+#+RESULTS:
+#+begin_example
+2
+[8,9,11,13]
+[8,9,11]
+[13,2]
+#+end_example
+
+
+#+begin_src haskell :session hlists
+9 `elem` nums
+maximum nums
+minimum nums
+sum nums
+product nums
+#+end_src
+
+
+
+#+begin_src haskell :session hlists
+import Data.List
+sort nums
+#+end_src
+
+
+#+begin_src haskell :session hlists
+zipWith (+) [1,2,3] [4,5,2,1]
+zipWith (\x y -> if(x > y) then x else y) [1,2,3] [4,5,2,1]
+zipWith max [1,2,3] [4,5,2,1]
+zipWith min [1,2,3] [4,5,2,1]
+zipWith (\ x y -> x/y + x*x + y*y) [1,2,3] [4,5,2, 1]
+#+end_src
+
+
+** List comprehensions
+List comprehensions are very similar to those in Python.
+The blueprint is =[<EXPR> | x <- <list>, <COND 1>, <COND 2>, ...]=
+#+begin_src haskell
+[x * 2 | x <- [1..10]]
+[x * y | x <- [1..3], y <-[1..3]]
+[x*3 | x <- [1..100], x * 3 <= 50]
+
+[x | x <- [1..500], x `mod` 2 == 0, x `mod` 17 == 0]
+#+end_src
+
+
+** Map Filter fold
+=map= and =filter= functions are often interchangeable with list comprehensions.
+
+#+begin_src haskell
+nums = [1,2,3,4,5]
+square n = n * n
+map square nums
+map (\x -> x*x) nums
+#+end_src
+
+
+
+#+begin_src haskell
+nums = [1..100]
+filter (\x -> x `mod` 3 == 0 && x`mod` 10 == 3) nums
+#+end_src
+
+
+
+=fold= functions are similar to =reduce= functions in python/javascript.
+#+begin_src haskell
+foldl (+) 0 [1,2,3,4] -- sum
+foldl max 0 [1,2,3,4] -- maximum, stupid but works
+
+foldl (\acc x -> acc ++ " " ++ show x ) "" [1,2,3,4]
+foldl (\acc x -> show x ++ " " ++ acc ) "" [1,2,3,4]
+foldr (\x acc -> acc ++ " " ++ show x ) "" [1,2,3,4]
+#+end_src
+
+
+** TakeWhile
+#+begin_src haskell
+takeWhile (<= 20) [1..]
+takeWhile (\x -> x <= 20) [1..20]
+#+end_src
+
+
+* Strings
+Strings are just lists of characters.
+#+begin_src haskell :compile yes
+removeUppercase :: String -> String
+removeUppercase st = [c | c <- st, not (c `elem` ['A'..'Z'] )]
+
+main = do
+  putStrLn $ removeUppercase "Hello THERE!"
+#+end_src
+
+
+* Tuples
+Similar to tuples in python.
+
+#+begin_src haskell :session htuples
+john = ("John Doe", 42)
+username = fst john
+age = snd john
+username ++ " is " ++ show age ++ " years old."
+#+end_src
+
+#+RESULTS:
+#+begin_example
+John Doe is 42 years old.
+#+end_example
+
+
+Usage in functions
+#+begin_src haskell :session htuples
+isAdult (name, age) = age >= 18
+isAdult john
+-- we didnt specify the type of isAdult function meaning
+isAdult ([3.14, 2.71], -2.1231)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+True
+False
+#+end_example
+
+
+You can create a list of tuples by using =zip= function.
+#+begin_src haskell
+ids = [1,2,3,4]
+names = ["Bob", "Joe", "Tom", "Rob"]
+zip ids names
+#+end_src
+
+* Main function
+Main function is the entry point of a program written in haskell.
+=do= keyword lets you chain functions together.
+
+#+begin_src haskell :compile yes :eval never
+import System.IO
+
+main = do
+  putStrLn "What's your name? "
+  name <- getLine
+  putStrLn ("Hello " ++ name)
+#+end_src
+
+* Function
+** Basic
+#+begin_src haskell :compile yes
+fact :: Integer -> Integer
+fact 0 = 1
+fact n = n* fact(n-1)
+
+main = do
+  print (fact 5)
+#+end_src
+
+
+** Guards
+Guards are just fancy and convenient if/case statements.
+#+begin_src haskell :compile yes
+message age | age == 18 = "You are an adult"
+            | age == 6  = "You should go to school"
+            | age == 19 = "You might want to consider higher education"
+            | otherwise = "Nothing fancy"
+main = do
+  putStrLn (message  18)
+  putStrLn (message 19)
+  putStrLn (message 6)
+  putStrLn (message 54)
+#+end_src
+
+
+** Functions with lists
+#+begin_src haskell :compile yes
+myMap :: (a -> b) -> [a] -> [b]
+myMap _      []       = []
+myMap mapper (x : xs) = mapper x : myMap mapper xs
+
+myFilter :: (a -> Bool) -> [a] -> [a]
+myFilter _ [] = []
+myFilter predicate (x : xs) | predicate x = x : myFilter predicate xs
+                            | otherwise   = myFilter predicate xs
+
+main :: IO ()
+main = do
+  print (myMap (* 3) [1, 2, 3, 4])
+  print (myFilter (>= 2) [1, 2, 3, 4])
+#+end_src
+
+
+#+begin_src haskell :compile yes
+describeList :: [Int] -> String
+describeList []           = "Empty"
+describeList (x     : []) = "THe only element is: " ++ show x
+describeList (x : y : []) = "First: " ++ show x ++ " Second: " ++ show y
+describeList nums = "List contains " ++ show (length nums) ++ " elements"
+
+main :: IO ()
+main = do
+  putStrLn (describeList [])
+  putStrLn (describeList [3])
+  putStrLn (describeList [3, 4])
+  putStrLn (describeList [3, 4, 5])
+#+end_src
+
+
+#+begin_src haskell :compile yes
+maximum' :: (Ord a) => [a] -> a
+maximum' []  = error "maximum of empty list"
+maximum' [x] = x
+maximum' (x : xs) | x > maxtail = x
+                  | otherwise   = maxtail
+  where maxtail = maximum' xs
+
+elem' :: (Eq a) => a -> [a] -> Bool
+elem' a []       = False
+elem' a (x : xs) = a == x || elem' a xs
+
+main = do
+  print $ maximum [1, 2, 3, 4, 2, 1]
+  print $ maximum "hello world"
+  print $ elem' 'e' "hello world"
+  print $ elem' 1 [2,3]
+#+end_src
+
+
+#+begin_src haskell :compile yes
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' f [] _ = []
+zipWith' f _ [] = []
+zipWith' f (x:xs) (y:ys) = (f x y) : zipWith' f xs ys
+
+addIndex :: Int -> String -> String
+addIndex x string = show x ++ ". " ++ string
+
+main = do
+  print $ zipWith' addIndex [1,2,3] ["Bob", "Tom", "Tim", "Joe"]
+  print $ zipWith' (++) ["Bob", "Tim"] ["Smith", "Johnes"]
+#+end_src
+
+
+** Pretty pattern matching with lists
+#+begin_src haskell :compile yes :eval yes
+tell :: Show a => [a] -> String
+tell []     = "Empty list"
+tell [x]    = "The list has one element " ++ show x
+tell [x, y] = "The list has two elements " ++ show x ++ " and " ++ show y
+tell (x : y : _) =
+  "This list is long. The first two elements are: "
+    ++ show x
+    ++ " and "
+    ++ show y
+
+main = do
+  putStrLn ( tell "")
+  putStrLn ( tell "c")
+  putStrLn ( tell [3.14, 2.71])
+  putStrLn ( tell [3.14, 2.71, 4, 5, 6])
+#+end_src
+
+
+** Composition
+
+#+begin_quote
+Dot operator =.= is doing function composition meaning
+f (g x) = (f . g) x
+#+end_quote
+
+#+begin_src haskell
+(putStrLn . show) (1 + 2)
+(putStrLn . show) $ 1 + 2
+putStrLn . show $ 1 + 2
+
+#+end_src
+
+
+** =all@=
+#+begin_src haskell :compile yes
+firstChar :: String -> String
+firstChar []           = "Empty List"
+firstChar all@(x : xs) = "First char in " ++ all ++ " is " ++ [x]
+
+main = do
+  putStrLn (firstChar "Bob")
+#+end_src
+
+
+** misc
+#+begin_src haskell :compile yes
+areStringsEqual :: String -> String -> Bool
+areStringsEqual []       []       = True
+areStringsEqual (x : xs) (y : ys) = x == y && areStringsEqual xs ys
+areStringsEqual _        _        = False
+
+main = do
+  print (areStringsEqual "robert" "tom")
+  print (areStringsEqual "robert" "robert")
+#+end_src
+
+
+** =case=
+=case= statement works the best with enumeration types.
+
+#+begin_src haskell :compile yes
+employeeId name = case name of
+  "Robert" -> 1
+  "Tim" -> 42
+  _ -> -1
+
+main = do
+    print (employeeId "Robert")
+    print (employeeId "Tim")
+    print (employeeId "Jacob")
+#+end_src
+
+
+Now example with pattern matching.
+#+begin_src haskell :compile yes
+describeList :: [a] -> String
+describeList xs = "The List is " ++ case xs of
+  []  -> "Empty"
+  [x] -> "singleton list"
+  xs  -> "a longer list"
+
+main = do
+  putStrLn $ describeList []
+  putStrLn $ describeList [2]
+  putStrLn $ describeList [1, 2, 3]
+#+end_src
+
+
+** Partial application
+#+begin_quote
+When you give a function an argument it returns another function that
+takes 1 less argument than the original one.
+#+end_quote
+
+You can even say that every function in Haskell takes exactly 1 argument.
+This whole behavior is known as "currying".
+
+#+begin_src haskell
+(+2) 3
+twice f x = (f.f) x
+twice ("Hello " ++ ) "John"
+
+isuppercase = ( `elem` ['A'..'Z'] )
+isuppercase 'A'
+isuppercase 'a'
+
+map (/2) [1..10]
+map (2-) [1..10] -- works
+-- does not work: map (-2) [1..10]
+map (`subtract` 2) [1..10]
+#+end_src
+
+
+Flip function takes in a function $f(x,y)$ and returns a the same function
+but the arguments are fliped meaning $f(y, x)$.
+
+#+begin_src haskell :compile yes
+flip' :: (a -> b -> c) -> b -> a -> c
+flip' f x y = f y x
+
+main = do
+  print $ flip' zip [1,2,3] "abc"
+#+end_src
+
+
+** Application using =$=
+The =$= sign is as everything in Haskell just a function with the following definition.
+
+#+begin_src haskell :eval no
+($) :: (a -> b) -> a -> b
+f $ x = f x
+#+end_src
+
+Function application with a space is left-associative so =f a b c= is
+the same as =(((f a) b) c)=. Function application with $ is right-associative.
+
+#+begin_src haskell :eval yes
+sum $ map (*2) [1..5]
+sum $ filter (>= 3) $ map (+3) [1..20]
+#+end_src
+
+
+Apart from reducing parentheses we can also use it call functions.
+For example
+#+begin_src haskell
+map ($ 3) [(+2), (*3), (/2)]
+map (\f -> f 3) [(+2), (*3), (/2)]
+#+end_src
+
+* Modules
+** Creating a module
+A module in haskell is just a file.
+#+begin_src haskell :eval never
+module NameOfModule (add, multiply) where
+add x y = x + y
+multiply x y = x * y
+#+end_src
+
+** Importing a module
+When we write src_haskell[:eval never]{import ModuleName} all of the exposed
+functions types etc are directly put into our namespace. This can very easily
+create conflicts to remedy this we have a couple options.
+
++ import only things that you need thus not polluting the namespace as much
+#+begin_src haskell :eval never
+import Data.List (nub, sort)
+#+end_src
+
+
++ by excluding entities that produce conflicts and ambiguity
+#+begin_src haskell  :val never
+import Data.List hiding (nub, sort)
+#+end_src
++ qualified import this puts all of the entities under its own namespace
+#+begin_src haskell
+import qualified Data.List
+Data.List.nub [1,1,2,2,2,3,2] -- removes duplicates
+#+end_src
+
++ writing =Data.List.nub= is a bit of a pain so we can use aliases
+#+begin_src haskell
+import qualified Data.List as L
+L.nub [1,1,2,2,2,3,2] -- removes duplicates
+#+end_src
+
+
+* Enumeration types
+We create enumeration by using =data= keyword
+#+begin_src haskell :compile yes
+data VehicleType = Car
+                | Pickup
+                | Suv
+                | Minivan
+                deriving Show
+
+vehicleDesc :: VehicleType -> String
+vehicleDesc vt = case vt of
+  Car     -> "Quick but rather small"
+  Pickup  -> "Practical but burns a lot of fuel"
+  Suv     -> "Good for offroading"
+  Minivan -> "Great for families"
+
+main = do
+  print (vehicleDesc Suv)
+#+end_src
+
+
+* Type classes
+** Basics
++ Type classes are for example =Num,Eq,Show=.
++ they are similar to interfaces in other languages
+
+We will define Employee.
+#+name: h-employee
+#+begin_src haskell :eval never
+data Employee = Employee {
+  name :: String,
+  position :: String,
+  idNum :: Int
+} deriving (Eq, Show)
+#+end_src
+
+Now we can use =show= =print= or ~=~ with our employees.
+#+begin_src haskell :compile yes :noweb strip-export
+<<h-employee>>samSmith = Employee { name = "Sam Smith", position = "Manager", idNum = 1 }
+pamMarx = Employee { name = "Pam Marx", position = "Sales", idNum = 1 }
+isSamPam = samSmith == pamMarx
+
+main = do
+  print isSamPam
+  print samSmith
+#+end_src
+
+
++ When we use =derving (Eq, Show)= haskell provides us with some implementation of
+   /show print or +  methods/ loosely speaking.  We can however provide our own.
++ This whole procedure is very similar to defining =__add__, __eq__, ...= methods
+   inside of classes in python.
+
+#+begin_src haskell :compile yes
+data ShirtSize = S | M | L
+
+instance Eq ShirtSize where
+  S == S = True
+  M == M = True
+  L == L = True
+  _ == _ = False
+
+instance Show ShirtSize where
+  show S = "Small"
+  show M = "Medium"
+  show L = "Large"
+
+smallAvail = S `elem`  [L, M, S]
+
+main = do
+  print smallAvail
+  print S
+#+end_src
+
+** Overview of typeclasses
+| typeclass name | description                         | functions                   |
+|----------------+-------------------------------------+-----------------------------|
+| =Eq=           | equality                            | ~==~ , ~/=~                 |
+| =Ord=          | ordering                            | ~> <= > >=~                 |
+| =Show=         | displaying as a string              | ~show~  ~print~             |
+| =Read=         | changing a string into value        | ~read~                      |
+| =Enum=         | sequentially ordered types          | ~[first..last]~ ~succ pred~ |
+| =Bounded=      | there exist upper and lower bound   | ~minBound maxBound~         |
+| =Num=          | numerics, can be added like numbers | ~+ *~                       |
+
+#+begin_src haskell :compile yes
+dist x y = sqrt (x * x + y * y)
+
+data Point = Point
+  { x :: Double
+  , y :: Double
+  }
+
+instance Eq Point where
+  (Point ax ay) == (Point bx by) = dist ax ay == dist bx by
+
+instance Ord Point where
+  (Point ax ay) `compare` (Point bx by) = dist ax ay `compare` dist bx by
+
+instance Show Point where
+  show (Point ax ay) = "(" ++ show ax ++ ", " ++ show ay ++ ")"
+
+main = do
+  print $ Point { x = 3, y = 3 } `compare` Point { x = 1, y = 2 }
+  print $ Point { x = 3, y = 3 }
+#+end_src
+
+
+=Enum= examples.
+#+begin_src haskell
+['a'..'e']
+succ 'b'
+pred 'x'
+[LT .. GT]
+#+end_src
+
+** Deriving examples
++ Haskell in some situations can automatically make our types an instance of the
+  following typeclases: =Eq= =Ord= =Enum= =Bounded= =Show= =Read=
++ you can write a lot about them but really what matters are examples
+
+#+begin_src haskell
+data User = User {name:: String, age :: Int} deriving (Eq, Show, Read)
+
+mike = User { name = "Micheal", age = 42 }
+john = User { name = "John", age = 23 }
+
+mike == john
+mike == User { name = "Micheal", age = 42 }
+print mike
+read "User {name = \"Micheal\", age = 42}" == mike
+#+end_src
+
+
+#+begin_src haskell :compile yes
+data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
+  deriving (Eq, Ord, Show, Read, Bounded, Enum)
+
+main = do
+  -- because Eq
+  print $ Monday == Monday
+  print $ Tuesday == Thursday
+
+  -- because Ord
+  print $ Friday > Tuesday
+  print $ Monday `compare` Sunday
+
+  -- because Show/Read
+  print Tuesday
+  print (read "Sunday" :: Day)
+
+  -- because Bounded
+  print (minBound :: Day)
+  print (maxBound :: Day)
+
+  -- because Enum
+  print $ succ Monday
+  print $ pred Sunday
+  print [Tuesday .. Saturday]
+#+end_src
+
+
+** Custom type class
+#+begin_src haskell :compile yes
+data ShirtSize = S | M | L
+
+class MyEq a where
+  areEqual :: a -> a -> Bool
+
+instance MyEq ShirtSize where
+  areEqual S S = True
+  areEqual M M = True
+  areEqual L L = True
+  areEqual _ _ = False
+
+main = do
+  print $ areEqual S M
+  print $ areEqual M M
+#+end_src
+
+** Type synonyms
++ Those are just aliases to already existing types
++ type synonyms can also accept arguments
+
+#+begin_src haskell :eval never
+type <new name> = <already existing>
+-- for example
+type String = [Char]
+#+end_src
+
+#+begin_src haskell
+type PhoneBook = [(String, String)] -- type
+type Name = String -- type
+type AssocList k v = [(k, v)] -- type constructor
+#+end_src
+
+** More advanced
+How =Eq= is defined.
+#+begin_src haskell :eval never
+class Eq a where
+  (==) :: a -> a -> Bool
+  (/=) :: a -> a -> Bool
+  x == y = not (x /= y)
+  x \= y = not (x == y)
+#+end_src
+
+A typeclass and be a subclass of another typeclass. Here's the first line of
+definition of =Num=
+#+begin_src haskell :eval never
+class (Eq a) => Num a where
+  ...
+#+end_src
+
+In order to make a type constructor an instance of a typeclass we can do:
+#+begin_src haskell :eval never
+instance Eq(m) => Eq (Maybe m) where
+    Just x == Just y = x == y
+    Nothing == Nothing = True
+    _ == _ = False
+#+end_src
+
+** =YesNo= example
+:PROPERTIES:
+:header-args:haskell: :noweb-ref yesno :noweb-sep "\n\n" :eval never :wrap example :results output
+:END:
+
+We will try to replicate the /true-ish false-ish/ values present in Javascript but
+also in python.
+
+#+begin_src haskell
+class YesNo a where
+  yesno :: a -> Bool
+#+end_src
+
++ we declare a new typeclass called =YesNo=
++ it has only want function =yesno=
++ now create some instances of that class
+
+#+begin_src haskell
+instance YesNo Int where
+  yesno 0 = False
+  yesno _ = True
+
+-- this obviously covers strings as well
+instance YesNo [a] where
+  yesno [] = False
+  yesno _ = True
+
+instance YesNo Bool where
+  yesno b = b
+
+instance YesNo (Maybe a) where
+  yesno Nothing = False
+  yesno _ = True
+#+end_src
+
+Now let's create a =YesNo= counterpart of =if=
+#+begin_src haskell
+yesnoIf :: (YesNo a) => a -> b -> b -> b
+yesnoIf cond x y = if yesno cond then x else y
+#+end_src
+
+Let's put this all to work
+#+begin_src haskell :compile yes :noweb strip-export :noweb-ref :eval yes
+<<yesno>>
+main = do
+  print $ yesno (0::Int)
+  print $ yesno (-123 :: Int)
+  print $ yesno ""
+  print $ yesno "hello there"
+  print $ yesno (Just 0)
+  print $ yesno Nothing
+  putStrLn $ yesnoIf (Just 123) "Okay" "Bad"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+False
+True
+False
+True
+True
+False
+Okay
+#+end_example
+
+
+* Functor
+** Basics
++ the purpose of =Eq= is to generalize equating things
++ the purpose of =Ord= is to generalize comparing things
++ in the same spirit a =Functor= is there to generalize mapping over values
++ a list is an instance of =Functor= type-class
++ types that are instances of =Functor= can usually be thought of as boxes that
+  hold the actual vales in some kind of structure, so instances of Functor
+  include:
+  + =[]=
+  + =Maybe=
+  + =Data.Map=
+  + =Tree=
+  + =Either= when you keep it mind that =Left= usually represents an error and =Right=
+    the result
++ a stricter/better term for functor instead of a box is an computational
+  context: =Maybe= contains some value but also indicates that an operation might
+  have failed. =List= is a undecided value(there are many possibilities).
++ If you think of functors as things that output values what =fmap= does really
+  is: attaching a transformation to the output of the functor
+
+#+begin_src haskell :eval never
+class Functor f where
+  fmap :: (a -> b) -> f a -> f b
+#+end_src
+
++ notice that =f= is not a placeholder for a concrete type (=Int, Char, [Float]=...)
++ =f= is a type constructor that takes one type as a parameter
++ let's compare =fmap= with =map=
+
+#+begin_src haskell :eval never
+map  :: (a -> b) -> [a] -> [b]
+fmap :: (a -> b) -> f a -> f b
+#+end_src
+
+#+begin_src haskell :eval yes
+import qualified Data.Map as Map
+fmap (*2) [1..3]
+map (*2) [1..3]
+people = Map.fromList ([(1, "Bob"),(3, "John"),(4, "Tom")])
+fmap (++ " Smith") people
+
+fmap (+2) (Just 3)
+fmap (+2) Nothing
+#+end_src
+
+
+Some instance of =Functor=.
+#+begin_src haskell :eval never
+instance Functor [] where
+  fmap = map
+
+instance Functor Maybe where
+  fmap f Nothing  = Nothing
+  fmap f (Just x) = Just (f x)
+
+instance Functor (Either a) where
+  fmap f (Left  x) = Left x
+  fmap f (Right x) = Right (f x)
+
+instance Functor Tree where
+  fmap f EmptyTree = EmptyTree
+  fmap f (Node x left right) = Node (f x) (fmap f left) (fmap f right)
+
+#+end_src
+
+** IO functor
++ =IO= is an instance of a functor.
++ =IO string= can be thought of as a box that goes out into the real world and
+  fetches you a value.
++ with =fmap f <io-action>= we can process the content of the IO action using
+  pure/basic functions
+
+#+begin_src haskell :eval never
+instance Functor IO where
+  fmap f action = do
+    value <- action
+    return (f value)
+#+end_src
+
+For example:
+#+begin_src haskell :compile yes
+main = do
+  contents <- fmap (takeWhile (/=':') . head . lines) (readFile "/etc/passwd")
+  putStrLn contents
+#+end_src
+
+** Function functor
++ Function are also functors
++ the =fmap= is just function composition
++ Why this definition? You can think that a for example =(+100)= is a box
+  containing it's eventual value and then it's natural that if we want to change
+  that value in the box the function composition is the way to go
++ Say we have a function like =Int -> Char= you can think of it as a large box
+  that contains *every single one of the functions possible outputs*. So in
+  essence it's a collection of values. When we do =fmap t f= we are attaching the
+  =t= transformation to every single one of those values.
+
+#+begin_src haskell :eval no
+instance Functor ((->) r) where
+ -- fmap :: (a-> b) -> ((->) r a)  -> ((->) r b)
+ -- fmap :: (a-> b) -> (r -> a)  -> (r-> b)
+    fmap f g = (\x -> f (g x))
+#+end_src
+
+#+begin_src haskell :eval yes
+fmap (+3) (*10) $ 2
+#+end_src
+
+
+** Lifting a function
+Because of the currying behavior of haskell we think of =fmap= in two ways
++ the first one is: take a mapping function apply to a /box/ and produce a new box with updated values
++ the second one is: take a mapping function a produce a mapping between functors
+#+begin_src haskell :eval never
+fmap :: (a->b) -> f a -> f b
+fmap :: (a->b) -> (f a -> f b)
+#+end_src
+
+For example
+#+begin_src haskell
+-- takes a functor over numbers and returns a functor over numbers
+:t fmap (*2)
+-- takes a functor over strings and returns a functor over strings
+:t fmap (++"!")
+-- takes a functor over anyting and returns a functor over lists of anything
+:t fmap (replicate 3)
+#+end_src
+
+
+** Functor laws
+$$\text{fmap}(\text{id}) = \text{id}$$
+$$ \text{fmap}(f \circ g) = \text{fmap}(f) \circ \text{fmap}(g) $$
++ you can think that those two properties ensure that mapping preserves the
+  structure, the changes are only introduced by the usage of f
++ in order to use functors and functions associated with them you need to make
+  sure that  those two conditions hold
+** Playing around wth functor operators
+#+begin_src haskell
+-- fmap :: (Functor f) => (a -> b) -> f a -> f b
+fmap (+2) (Left 3)
+fmap (+2) (Right 3)
+
+fmap (*2) [1..5]
+
+fmap (+1) (Just 3)
+fmap (+1) Nothing
+
+fmap (+1) (0,0)
+fmap (+1) (0,0,0)
+#+end_src
+
+
+
+#+begin_src haskell
+import Data.Char
+-- ($) :: (a -> b) -> a -> b
+-- (<$>) :: (Functor f) => (a -> b) -> f a -> f b
+(+2) <$> (Right 3)
+(+1) <$> (Just 3)
+
+
+toUpper <$> "Hello world"
+(map toUpper) <$> ["hello there", "hello world"]
+
+(+1) <$> (*10) $ 1
+
+(+1) <$> (0, 0)
+#+end_src
+
+
+
+#+begin_src haskell
+-- (<$) :: a -> f b -> f a
+1 <$ Left 2
+1 <$ Right 3
+
+'a' <$ [1..5]
+'a' <$ []
+
+'a' <$ Just 1
+'a' <$ Nothing
+
+1 <$ (*10) $ 5
+
+1 <$ (0,0)
+1 <$ (0,0,0)
+#+end_src
+
+
+** Make custom list an instance of functor
+#+begin_src haskell :compile yes :cache no
+data MyList a = EmptyList | Cons a (MyList a) deriving Show
+
+instance Functor MyList where
+  fmap _ EmptyList = EmptyList
+  fmap f (Cons x xs) = Cons (f x) (fmap f xs)
+
+main = do
+  print $ fmap (*2) (Cons 3 (Cons 4 (Cons 5 EmptyList)))
+  print $ 3 <$ (Cons 3 (Cons 4 EmptyList))
+#+end_src
+
+
+* Applicative functors
+** Basics
++ =fmap= works for functions that take a single argument.
++ We want to be able to work with multiparameter functions.
+
+Let's see what happens we try to use binary functions with =fmap=
+#+begin_src haskell
+:t fmap (+) (Just 3)
+:t fmap compare (Just 8)
+:t fmap (++) ["hello", "hi"]
+:t fmap (\x y z -> x*y -z) [3, 4, 8]
+#+end_src
+
+
+We see that we get functions that are wrapped in functors/boxes/contexts. So in
+order to be able to work with them further down the line we need to be able to
+operate/execute such functions that are inside of functors.
+
+This is where the =Applicative= typeclass comes into play:
+
+#+begin_src haskell :eval never
+class (Functor f) => Applicative f where
+  pure :: a -> f a
+  <*> :: f (a -> b) -> f a -> f b
+#+end_src
+
++ in order for a type constructor to be =Applicative= it needs to be a =Functor=
++ =pure= function wraps values inside of default/minimal context
++ =<*>= is an inline function that does exactly what we need, meaning it takes a
+  functor that contains a function and a functor over type =a= and produces a
+  functor over type =b=
++ =<*>= is really generalized =fmap=
+** Maybe
+=Maybe= is an instance of =Applicative=
+
+#+begin_src haskell :eval never
+instance Applicative Maybe where
+  pure = Just
+  Nothing <*> _ = Nothing
+  (Just f) <*> sth = fmap f sth
+#+end_src
+
++ minimal context for =Maybe= is =Just=, it's not =Nothing= because we cannot put any
+  function into it
++ if we try to /apply/ =Nothing= to something we get nothing
++ otherwise we extract the function from =Just f= and apply it to the right side of =<*>=
+
+#+begin_src haskell
+Just (+3) <*> (Just 8)
+pure (+) <*> (Just 3) <*> (Just 8)
+Nothing <*> (Just 3) <*> (Just 8)
+pure (+) <*> Nothing <*> (Just 8)
+(:) <$> (Just 3) <*> (Just [4])
+#+end_src
+
+
+There exist a shorter syntax for =pure (+) <*> ...=
+Notice the similarity to the normal function application.
+
+#+begin_src haskell
+(++) <$> (Just "hello") <*> (Just " world")
+(++)            "hello"           " world"
+#+end_src
+
+
+** List
+
+#+begin_src haskell :eval never
+instance Applicative []  where
+  pure x = [x]
+  fs <*> xs = [f x | f <- fs, x <- xs]
+#+end_src
+
++ minimal context is a one element list
++ when we want to apply functions from one list to another we create a new list
+  of all possible combinations
++ you can think that a list represents a non-deterministic value
++ so when we have a non-deterministic function(there are multiple of them) and
+  non-deterministic variable it makes sense to create all of those combinations
+
+#+begin_src haskell
+[(+2), (*3), (subtract 2)] <*> [2,3]
+(++) <$> ["hi", "hello", "welcome"] <*> ["!", "."]
+(*) <$> [1,2,3] <*> [4,5]
+#+end_src
+
+
+** IO
+#+begin_src haskell :eval never
+instance Applicative IO where
+  pure = return
+  a <*> b = do
+    f <- a
+    x <- b
+    return (f x)
+#+end_src
+
+#+begin_src haskell :eval never
+myAction :: IO String
+myAction = do
+    a <- getLine
+    b <- getLine
+    return $ a ++ b
+
+-- we could rewrite the previous function simply as
+myAction = (++) <$> getLine <*> getLine
+#+end_src
+
+** Function
+#+begin_src haskell :eval never
+instance Applicative ((->) r) where
+  pure x = (\_ -> x)
+  f <*> g = (\x -> f x (g x))
+#+end_src
+
+#+begin_src haskell
+(*) <*> (+3) $ 5
+-- (\x -> (*) x (+3 x))
+add3 x y z = x + y + z
+add3 <*> (+3) <*> (*2) $ 3
+-- (\x -> add3 x (x + 3))
+-- (\x -> \x -> add3 (x*2) ((x*2) +3))
+add3 <$> (+3) <*> (*2) <*> (^2) $ 2
+#+end_src
+
+
+#+begin_src haskell
+-- (*) <$> (+3)
+-- 1 -> (* 4)
+-- 2 -> (* 5)
+-- 3 -> (* 6)
+
+(+) <$> (+3) <*> (*100) $ 5
+-- v -> (v+3)
+-- v -> (v+3) + _
+-- v -> (v+3) + (*100 v)
+
+#+end_src
+
+
+#+begin_src haskell
+(\x y z -> [x,y,z]) <$> (+3) <*> (*2) <*> (/2) $ 5
+
+-- v -> (v+3)
+-- v -> (\y z -> [v+3, y, z])
+-- v -> (\y z -> [v+3, y, z])
+-- v -> (\ z  -> [v+3, (*2 v), z])
+-- v ->  [v+3, (* 2 v), (_/2)]
+-- [5+3, (*2 5), (5/2)]
+-- [8, 10, 2.5]
+#+end_src
+
+
+** Ziplist
++ There are multiple viable implementations of =pure= and =<*>= for lists
++ One of them is =ZipList= which can be really useful for example when
+   dealing with mathematical vectors
+
+#+begin_src haskell :eval never
+instance Applicative ZipList where
+  pure x = ZipList (repeat x)
+  ZipList fs <*> ZipList xs = ZipList (zipWith (\f x -> f x) fs xs)
+#+end_src
+
+#+begin_src haskell
+import Control.Applicative
+
+ZipList [1,2,3,4]
+getZipList $ ZipList [1,2,3]
+
+getZipList $ (*2) <$> ZipList [1,2,3]
+getZipList $ (+) <$> ZipList [1,2,3] <*> ZipList [-1, -2, -3]
+getZipList $ (+) <$> ZipList [1,2,3] <*> ZipList [-1, -2, -3]
+
+#+end_src
+
+
+** Laws
+1) =pure f <*> x = fmap f x=
+2) =pure id <*> v = v=
+3) =pure (.) <*> u <*> v <*> w = u <*> (v <*> w)=
+4) =pure f <*> pure x = pure (f x)=
+5) =u <*> pure y = pure ($ y) <*> u=
+#+begin_export latex
+123
+#+end_export
