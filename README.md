@@ -13,7 +13,7 @@ viewing. Here's a glimpse into the structure:
   compilation process
 - `finite-element-method-DEs` - solving a simple DE using the finite element-method
 - `shell-scripting` - notes that contain some basics on creating shell scripts
-- `git-basics` - overiew of git commands and their usage
+- `git-basics` - overview of git commands and their usage
 - `wstep-do-informatyki` - notes that I created when doing a course at AGH UST on basics of programming.
 - `negative-integers-binary` - three different approaches on how to store
   negative numbers in binary
